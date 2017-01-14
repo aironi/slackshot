@@ -1,21 +1,17 @@
 import sys, getopt
+import ConfigParser
+
 import picamera
 import time
 from slacker import Slacker
 
 def main(argv):
-    apikey = ''
-    try:
-        opts, args = getopt.getopt(argv,"hk:o:",["apikey="])
-    except getopt.GetoptError:
-        print 'slackshot.py -k <slack api key'
-        sys.exit(2)
-    for opt, arg in opts:
-        if opt == '-h':
-            print 'slackshot.py -k <slack api key>'
-            sys.exit()
-        elif opt in ("-k", "--key"):
-            apikey = arg
+    config = ConfigParser.ConfigParser()
+    config.read('slackshot.cfg')
+    apikey = config.get('config', 'api-key')
+    if apikey is None:
+         print 'Please add api-key to slackshot.cfg under [config] -section'
+         sys.exit(2)
 
     start_capture(apikey)
 
@@ -33,10 +29,8 @@ def start_capture(apikey):
 
         slack = Slacker(apikey)
         slack.chat.post_message('#slackshot-test', 'Check out this amazing trick-shot!')
-
-        # Upload a file
         slack.files.upload('/home/pi/image.jpg', channels="slackshot-test")
-        #slack.files.upload('/home/pi/image.jpg')
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])
