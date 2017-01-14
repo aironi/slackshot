@@ -27,7 +27,7 @@ class Button(threading.Thread):
                 self._pressed = True
                 print "{} was triggered.".format(self.name)
                 while self._pressed:
-                    time.sleep(0.05)
+                    time.sleep(0.2)
 
 
 

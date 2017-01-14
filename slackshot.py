@@ -8,33 +8,33 @@ from slacker import Slacker
 
 
 def main(argv):
+    (slack_config, camera_config, gpio_config) = parse_config()
+    start_capture(slack_config, gpio_config, camera_config)
+
+
+def parse_config():
     config = ConfigParser.ConfigParser({'brightness': '50', 'contrast': '50', 'duration': '30', 'frame-rate': '30',
-                                        'message': 'Check out this amazing trick-shot!', 'pir' : '-1'})
+                                        'message': 'Check out this amazing trick-shot!', 'pir': '-1'})
     config.read('slackshot.cfg')
     apikey = config.get('slack', 'api-key')
     if apikey is None:
         print 'Please add api-key to slackshot.cfg under [slack] -section'
         sys.exit(2)
-
     button_pin = config.getint('gpio', 'button')
     if button_pin is None:
         print 'Please add pin to slackshot.cfg under [button] -section'
         sys.exit(2)
-
     pir_pin = config.getint('gpio', 'pir')
-
     channels = config.get('slack', 'channels')
     slack_config = {'api-key': apikey, 'channels': channels.split(','),
                     'message': config.get('slack', 'message')}
-
     camera_config = {'brightness': config.getint('camera', 'brightness'),
                      'contrast': config.getint('camera', 'contrast'),
                      'duration': config.getint('camera', 'duration'),
                      'frame-rate': config.getint('camera', 'frame-rate'),
-                     'resolution' : (config.getint('camera', 'width'), config.getint('camera','height'))}
-
-    gpio_config = {'button' : button_pin, 'pir' : pir_pin}
-    start_capture(slack_config, gpio_config, camera_config)
+                     'resolution': (config.getint('camera', 'width'), config.getint('camera', 'height'))}
+    gpio_config = {'button': button_pin, 'pir': pir_pin}
+    return (slack_config, camera_config, gpio_config)
 
 
 def start_capture(slack_config, gpio_config, camera_config):
