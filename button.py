@@ -6,11 +6,12 @@ class Button(threading.Thread):
 
     _pressed = False
 
-    def __init__(self, channel):
+    def __init__(self, name, channel):
         threading.Thread.__init__(self)
         self._pressed = False
         self.channel = channel
-        print "Initializing channel {} as input".format(self.channel)
+        self.name = name
+        print "Initializing channel {} as input for {}".format(self.channel, self.name)
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.channel, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         self.daemon = True
@@ -24,7 +25,7 @@ class Button(threading.Thread):
 
             if current == 1:
                 self._pressed = True
-                print "Press detected"
+                print "{} was triggered.".format(self.name)
                 while self._pressed:
                     time.sleep(0.05)
 
