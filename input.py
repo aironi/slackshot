@@ -20,15 +20,16 @@ class Input(threading.Thread):
         self.start()
 
     def run(self):
+        previous = 0
         while True:
             current = GPIO.input(self.channel)
-            time.sleep(0.2)
+            time.sleep(0.05)
 
-            if current == 1:
+            if current == 1 and previous == 0:
                 self._pressed = True
                 print "{} was triggered.".format(self.name)
                 while self._pressed:
-                    time.sleep(0.2)
-
+                    time.sleep(0.05)
+            previous = current
 
 

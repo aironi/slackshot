@@ -1,6 +1,6 @@
 from input import Input
 from slacker import Slacker
-import sys, getopt
+import sys, getopt, os
 import ConfigParser
 import picamera
 import time
@@ -69,7 +69,7 @@ def start_capture(slack_config, gpio_config, camera_config):
                 send_video(slack_config, camera_config['video-path'])
                 button._pressed = False
 
-            time.sleep(0.5)
+            time.sleep(0.1)
 
 
 def configure_camera(camera, camera_config):
@@ -91,12 +91,17 @@ def record_video(camera, video_path, duration):
 
 
 def send_video(slack_config, video_path):
-    channels = slack_config['channels']
-    message = slack_config['message']
-    print "Sending video to channel(s): {}".format(channels)
-    slack = Slacker(slack_config['api-key'])
-    slack.chat.post_message(channels, message)
-    slack.files.upload(video_path, channels=channels)
+    if os.path.isfile(video_path):
+        channels = slack_config['channels']
+        message = slack_config['message']
+        print "Sending video to channel(s): {}".format(channels)
+        slack = Slacker(slack_config['api-key'])
+        slack.chat.post_message(channels, message)
+        slack.files.upload(video_path, channels=channels)
+        print "Deleting file"
+        os.remove(video_path)
+    else:
+        print "No file to send at {}".format(video_path)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
