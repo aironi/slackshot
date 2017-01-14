@@ -1,79 +1,102 @@
-from button import Button
+from input import Input
+from slacker import Slacker
 import sys, getopt
 import ConfigParser
 import picamera
 import time
 
-from slacker import Slacker
-
-
 def main(argv):
     (slack_config, camera_config, gpio_config) = parse_config()
     start_capture(slack_config, gpio_config, camera_config)
 
-
 def parse_config():
-    config = ConfigParser.ConfigParser({'brightness': '50', 'contrast': '50', 'duration': '30', 'frame-rate': '30',
-                                        'message': 'Check out this amazing trick-shot!', 'pir': '-1'})
+    defaults = {'brightness': '50',
+                'contrast': '50',
+                'duration': '30',
+                'frame-rate': '30',
+                'message': 'Check out this amazing trick-shot!',
+                'pir': '-1', # PIR is disabled by default
+                'video-path' : '/home/pi/video.h264'}
+
+    config = ConfigParser.ConfigParser(defaults)
     config.read('slackshot.cfg')
-    apikey = config.get('slack', 'api-key')
-    if apikey is None:
+    api_key = config.get('slack', 'api-key')
+    if api_key is None:
         print 'Please add api-key to slackshot.cfg under [slack] -section'
         sys.exit(2)
+
     button_pin = config.getint('gpio', 'button')
     if button_pin is None:
-        print 'Please add pin to slackshot.cfg under [button] -section'
+        print 'Please add button to slackshot.cfg under [gpio] -section'
         sys.exit(2)
+
     pir_pin = config.getint('gpio', 'pir')
     channels = config.get('slack', 'channels')
-    slack_config = {'api-key': apikey, 'channels': channels.split(','),
+    slack_config = {'api-key': api_key, 'channels': channels.split(','),
                     'message': config.get('slack', 'message')}
-    camera_config = {'brightness': config.getint('camera', 'brightness'),
+
+    camera_config = {'video-path': config.get('camera', 'video-path'),
+                     'brightness': config.getint('camera', 'brightness'),
                      'contrast': config.getint('camera', 'contrast'),
                      'duration': config.getint('camera', 'duration'),
                      'frame-rate': config.getint('camera', 'frame-rate'),
                      'resolution': (config.getint('camera', 'width'), config.getint('camera', 'height'))}
+
     gpio_config = {'button': button_pin, 'pir': pir_pin}
+
     return (slack_config, camera_config, gpio_config)
 
 
 def start_capture(slack_config, gpio_config, camera_config):
-    button = Button('Button', gpio_config['button'])
+    button = Input('Button', gpio_config['button'])
     pir = None
     if gpio_config['pir'] != -1:
-        pir = Button('PIR sensor', gpio_config['pir'])
+        pir = Input('PIR sensor', gpio_config['pir'])
     else:
-        print "No PIR sensor configured."
+        print "No PIR sensor configured. Recording constantly."
 
     with picamera.PiCamera() as camera:
-        camera.brightness = camera_config['brightness']
-        camera.contrast = camera_config['contrast']
-        camera.framerate = camera_config['frame-rate']
-        camera.resolution = camera_config['resolution']
+        configure_camera(camera, camera_config)
         print 'Starting main loop...'
         while True:
             if pir is None or pir._pressed:
-                print "Recording clip for {} seconds...".format(camera_config['duration'])
-                camera.start_preview()
-                camera.start_recording('/home/pi/video.h264')
-                time.sleep(camera_config['duration'])
-                camera.stop_recording()
-                camera.stop_preview()
-                print "Recorded."
+                record_video(camera, camera_config['video-path'], camera_config['duration'])
 
                 if pir is not None:
                     pir._pressed = False
 
             if button._pressed:
-                channels = slack_config['channels']
-                message = slack_config['message']
-                print "Sending video to channel(s): {}".format(channels)
-                slack = Slacker(slack_config['api-key'])
-                slack.chat.post_message(channels, message)
-                slack.files.upload('/home/pi/video.h264', channels=channels)
+                send_video(slack_config, camera_config['video-path'])
                 button._pressed = False
 
             time.sleep(0.5)
+
+
+def configure_camera(camera, camera_config):
+    print "Configuring camera..."
+    camera.brightness = camera_config['brightness']
+    camera.contrast = camera_config['contrast']
+    camera.framerate = camera_config['frame-rate']
+    camera.resolution = camera_config['resolution']
+
+
+def record_video(camera, video_path, duration):
+    print "Recording clip for {} seconds...".format(duration)
+    camera.start_preview()
+    camera.start_recording(video_path)
+    time.sleep(duration)
+    camera.stop_recording()
+    camera.stop_preview()
+    print "Recorded."
+
+
+def send_video(slack_config, video_path):
+    channels = slack_config['channels']
+    message = slack_config['message']
+    print "Sending video to channel(s): {}".format(channels)
+    slack = Slacker(slack_config['api-key'])
+    slack.chat.post_message(channels, message)
+    slack.files.upload(video_path, channels=channels)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

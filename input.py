@@ -2,14 +2,16 @@ import threading
 import RPi.GPIO as GPIO
 import time
 
-class Button(threading.Thread):
-
+'''
+A named input that reads a GPIO pin
+'''
+class Input(threading.Thread):
     _pressed = False
 
-    def __init__(self, name, channel):
+    def __init__(self, name, pin):
         threading.Thread.__init__(self)
         self._pressed = False
-        self.channel = channel
+        self.channel = pin
         self.name = name
         print "Initializing channel {} as input for {}".format(self.channel, self.name)
         GPIO.setmode(GPIO.BCM)
@@ -18,7 +20,6 @@ class Button(threading.Thread):
         self.start()
 
     def run(self):
-
         while True:
             current = GPIO.input(self.channel)
             time.sleep(0.2)
