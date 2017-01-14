@@ -16,15 +16,13 @@ last video is sent to Slack into configured channel(s).
 
 ## Configuration
 
-slack.api-key -  The api key for a bot
-slack.channels - Comma separated list of channels to send the videos to
-slack.message - Message to post before uploading video
- 
-camera.width - Width of the video, e.g. 1920
-camera.height - Height of the video, e.g. 1080
-camera.brightness - Brightness setting for camera
-camera.contrast - Contrast setting for camera
-camera.frame-rate - Frame rate for video
-
-gpio.button = GPIO pin for the button (that sends video)
-gpio.pir = GPIO pin for the PIR sensor (optional)
+* slack.api-key -  The api key for a bot
+* slack.channels - Comma separated list of channels to send the videos to
+* slack.message - Message to post before uploading video
+* camera.width - Width of the video, e.g. 1920
+* camera.height - Height of the video, e.g. 1080
+* camera.brightness - Brightness setting for camera
+* camera.contrast - Contrast setting for camera
+* camera.frame-rate - Frame rate for video
+* gpio.button = GPIO pin for the button (that sends video)
+* gpio.pir = GPIO pin for the PIR sensor (optional)
