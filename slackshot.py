@@ -9,6 +9,7 @@ def main(argv):
     config = ConfigParser.ConfigParser({'brightness' : '50', 'contrast' : '50', 'duration' : '30', 'frame-rate' : '30'})
     config.read('slackshot.cfg')
     apikey = config.get('slack', 'api-key')
+    channels = confi.get('slack', )
     if apikey is None:
          print 'Please add api-key to slackshot.cfg under [slack] -section'
          sys.exit(2)
@@ -17,7 +18,7 @@ def main(argv):
     contrast = config.getint('camera', 'contrast')
     duration = config.getint('camera', 'duration')
     frame_rate = config.getint('camera', 'frame-rate')
-    camera_config = { 'brightness' : brightness, 'contrast' : contrast, 'duration' : duration }
+    camera_config = { 'brightness' : brightness, 'contrast' : contrast, 'duration' : duration, 'frame-rate' : frame-rate}
     start_capture(apikey, camera_config)
 
 
@@ -26,6 +27,7 @@ def start_capture(apikey, camera_config):
     with picamera.PiCamera() as camera:
         camera.brightness = camera_config['brightness']
         camera.contrast = camera_config['contrast']
+        camera.framerate = camera_config['frame-rate']
 
         camera.start_preview()
 
