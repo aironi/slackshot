@@ -59,20 +59,19 @@ def start_capture(slack_config, gpio_config, camera_config):
                 time.sleep(camera_config['duration'])
                 camera.stop_recording()
                 camera.stop_preview()
-
-                if button._pressed:
-                    channels = slack_config['channels']
-                    message = slack_config['message']
-                    print "Sending video to channel(s): {}".format(channels)
-                    slack = Slacker(slack_config['api-key'])
-                    slack.chat.post_message(channels, message)
-                    slack.files.upload('/home/pi/video.h264', channels=channels)
-                    button._pressed = False
-                else:
-                    print "No button press detected."
+                print "Recorded."
 
                 if pir is not None:
                     pir._pressed = False
+
+            if button._pressed:
+                channels = slack_config['channels']
+                message = slack_config['message']
+                print "Sending video to channel(s): {}".format(channels)
+                slack = Slacker(slack_config['api-key'])
+                slack.chat.post_message(channels, message)
+                slack.files.upload('/home/pi/video.h264', channels=channels)
+                button._pressed = False
 
             time.sleep(0.5)
 
